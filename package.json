@@ -1,0 +1,87 @@
+{
+	"name": "vscode-bml",
+	"displayName": "vscode-bml",
+	"description": "Language support for BML",
+	"version": "0.0.1",
+	"publisher": "i5",
+	"engines": {
+		"vscode": "^1.73.0"
+	},
+	"categories": [
+		"Programming Languages"
+	],
+	"activationEvents": [
+		"onLanguage:bml",
+		"onCommand:extension.vscode-bml"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "extension.vscode-bml",
+				"title": "BML"
+			}
+		],
+		"languages": [
+			{
+				"id": "bml",
+				"aliases": [
+					"BML",
+					"bml"
+				],
+				"extensions": [
+					".bml"
+				]
+			}
+		],
+		"grammars": [
+			{
+				"language": "bml",
+				"scopeName": "source.bml",
+				"path": "./syntaxes/bml.tmLanguage.json"
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "Example configuration",
+			"properties": {
+			  "bmlLangServer.maxNumberOfProblems": {
+				"type": "number",
+				"default": 100,
+				"description": "Controls the maximum number of problems produced by the server."
+			  },
+			  "bmlLangServer.trace.server": {
+				"type": "string",
+				"enum": [
+				  "off",
+				  "messages",
+				  "verbose"
+				],
+				"default": "verbose",
+				"description": "Traces the communication between VSCode and the bmlLangServer service."
+			  }        
+			}
+		  }
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile",
+		"test": "node ./out/test/runTest.js"
+	},
+	"dependencies": {
+		"vscode-languageclient": "5.1.1"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.1.1",
+		"@types/mocha": "^5.2.6",
+		"@types/node": "^10.12.21",
+		"@types/vscode": "^1.38.0",
+		"glob": "^7.1.4",
+		"mocha": "^6.1.4",
+		"typescript": "^3.3.1",
+		"tslint": "^5.12.1",
+		"vscode-test": "^1.2.0"
+	}
+}
