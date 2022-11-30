@@ -1,23 +1,51 @@
-import * as path from 'path';
+import * as fs from 'fs';
+import * as net from 'net';
+import * as child_process from "child_process";
 import * as vscode from 'vscode';
 
-import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions, StreamInfo } from 'vscode-languageclient';
 
-const main: string = 'i5.bml.langserver.BMLLangServerMain';
 let client: LanguageClient;
 
 export function activate(context: vscode.ExtensionContext) {
-	let excecutable: string = path.join('/home/marc/.jdks/corretto-17.0.5', 'bin', 'java');
+	function createServer(): Promise<StreamInfo> {
+		return new Promise((resolve, reject) => {
+			var server = net.createServer((socket) => {
+				console.log("Creating server");
 
-	let classPath = '/home/marc/bml/lang-server/build/libs/lang-server-0.1-SNAPSHOT.jar';
-	const args: string[] = ['-cp', classPath];
+				resolve({
+					reader: socket,
+					writer: socket
+				});
 
-	// Set the server options 
-	// -- Run command: java -cp ./../bml-lang-server/bml-lang-server.jar i5.bml.langserver.BMLLangServerMain
-	let serverOptions: ServerOptions = {
-		command: excecutable,
-		args: [...args, main],
-		options: {}
+				socket.on('end', () => console.log("Disconnected"));
+			}).on('error', (err) => {
+				// TODO: handle errors
+				throw err;
+			});
+
+			let javaExecutablePath = '/home/marc/.jdks/corretto-17.0.5/bin/java';
+
+			server.listen(42069, () => {
+				let options = { cwd: vscode.workspace.rootPath };
+
+				let args = [
+					'-jar',
+					'/home/marc/bml/lang-server/build/libs/lang-server-0.1-SNAPSHOT.jar'
+				]
+
+				// Start the child java process
+				let process = child_process.spawn(javaExecutablePath, args, options);
+
+				let logFile = '/home/marc/bml/lang-server/build/libs/bml-lang-server.log';
+				let logStream = fs.createWriteStream(logFile, { flags: 'w' });
+
+				process.stdout.pipe(logStream);
+				process.stderr.pipe(logStream);
+
+				console.log(`Storing log in '${logFile}'`);
+			});
+		});
 	};
 
 	let clientOptions: LanguageClientOptions = {
@@ -30,7 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	};
 
-	client = new LanguageClient('bml-lang-server', 'BML Language Server', serverOptions, clientOptions);
+	client = new LanguageClient('bml-lang-server', 'BML Language Server', createServer, clientOptions);
 	let disposable = client.start();
 }
 
